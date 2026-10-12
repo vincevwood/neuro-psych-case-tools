@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neuro, Psych, or Both?</title>
+<meta name="description" content="Interactive teaching tools for a Grand Rounds case: differential diagnosis, perceptual disturbances, and the symptom loop.">
+<style>
+:root{
+  --bg:#0b1f4d; --bg2:#00205b; --card:#0f2a66; --line:#2c4a8c;
+  --gold:#ffb81c; --text:#ffffff; --muted:#b8c4d9; --good:#6fd3a8; --bad:#ff8a7a; --blue:#8fc1ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.4}
+header{padding:18px 16px 8px;max-width:860px;margin:0 auto}
+header h1{margin:0;font-family:"Arial Black",Arial,sans-serif;font-size:22px;color:var(--gold)}
+header p{margin:4px 0 0;color:var(--muted);font-size:14px}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:6px;max-width:860px;margin:0 auto;padding:8px 16px;overflow-x:auto}
+nav button{flex:1 0 auto;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:9px 14px;font-size:14px;font-weight:bold;cursor:pointer;white-space:nowrap}
+nav button[aria-selected=true]{background:var(--gold);color:#00205b;border-color:var(--gold)}
+main{max-width:860px;margin:0 auto;padding:12px 16px 60px}
+section[hidden]{display:none}
+h2{font-family:"Arial Black",Arial,sans-serif;font-size:19px;color:var(--gold);margin:8px 0 4px}
+h3{font-size:15px;color:var(--gold);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.04em}
+.lead{color:var(--muted);font-size:14px;margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px;text-align:left;cursor:pointer}
+.chip[aria-pressed=true]{background:#1d3f86;border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.chip[aria-pressed=true]::before{content:"\2713  ";color:var(--gold);font-weight:bold}
+.chip.whatif{border-style:dashed}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.btn{background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:bold;cursor:pointer}
+.btn:hover,.chip:hover{filter:brightness(1.15)}
+.dx{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:8px 0;overflow:hidden}
+.dx summary{list-style:none;cursor:pointer;padding:10px 12px}
+.dx summary::-webkit-details-marker{display:none}
+.dxtop{display:flex;justify-content:space-between;gap:8px;font-weight:bold;font-size:14.5px}
+.score{color:var(--gold);font-variant-numeric:tabular-nums}
+.bar{height:8px;background:#0a1d47;border-radius:6px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:6px;transition:width .35s ease}
+.dx ul{margin:0;padding:0 12px 12px 30px;font-size:13.5px}
+.dx li{margin:3px 0}
+.dx li.for::marker{content:"+  ";color:var(--good)}
+.dx li.against::marker{content:"\2212  ";color:var(--bad)}
+.dx .none{color:var(--muted);font-size:13px;padding:0 12px 12px}
+#dxmini{position:sticky;top:52px;z-index:4;background:#0a1d47;border:1px solid var(--gold);border-radius:12px;padding:8px 12px;margin:8px 0;font-size:13px}
+#dxmini b{color:var(--gold)}
+#dxmini a{color:var(--muted);font-size:12px}
+.note{color:var(--muted);font-size:12.5px;margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+/* sorter */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:10px 0}
+.quote{font-size:17px;font-style:italic;margin:4px 0 12px}
+.ctx{color:var(--muted);font-size:13px;margin:-6px 0 12px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opts button{background:#0a1d47;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13.5px;cursor:pointer;text-align:left}
+.opts button.right{border-color:var(--good);background:#11402f}
+.opts button.wrong{border-color:var(--bad);background:#4a1d1d}
+.explain{margin-top:12px;font-size:14px;display:none}
+.explain.show{display:block}
+.progress{color:var(--muted);font-size:13px}
+.key{display:grid;gap:8px;margin-top:8px}
+.key div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
+.key b{color:var(--gold)}
+/* loop */
+.loopwrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}
+svg text{font-family:Arial,Helvetica,sans-serif}
+.meter{display:flex;align-items:center;gap:10px;margin:10px 0}
+.meter .bar{flex:1;height:14px}
+.meter .bar i{background:linear-gradient(90deg,var(--good),var(--gold),var(--bad))}
+.meter b{min-width:150px;font-size:14px}
+.verdict{background:#0a1d47;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:8px}
+@media (max-width:520px){.opts{grid-template-columns:1fr}.meter b{min-width:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Neuro, Psych, or Both?</h1>
+  <p>Teaching tools for tonight's case. A composite, de-identified teaching case; these are learning toys, not clinical decision tools.</p>
+</header>
+<nav><div class="wrap" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="ddx">Differential</button>
+  <button role="tab" aria-selected="false" data-tab="see">What is she seeing?</button>
+  <button role="tab" aria-selected="false" data-tab="loop">The loop</button>
+</div></nav>
+<main>
+
+<!-- ===================== TOOL 1: DIFFERENTIAL ===================== -->
+<section id="ddx">
+  <h2>Build the differential</h2>
+  <p class="lead">Tap findings on or off and watch the differential re-rank. Start with the first visit, then add what the next year brought. Tap a diagnosis to see what is for and against it.</p>
+  <div class="row">
+    <button class="btn" id="preset1">First visit</button>
+    <button class="btn" id="preset2">A year later</button>
+    <button class="btn" id="presetClear">Clear all</button>
+  </div>
+  <div id="dxmini" aria-live="polite"></div>
+  <h3>First visit</h3>
+  <div class="chips" id="f-early"></div>
+  <h3>Over the next year</h3>
+  <div class="chips" id="f-late"></div>
+  <h3>What if… (not in this case)</h3>
+  <div class="chips" id="f-whatif"></div>
+  <h3>Differential, ranked</h3>
+  <div id="dxlist"></div>
+  <p class="note">Weights are the presenter's teaching judgment, written to show how findings shift the reasoning. They are not validated probabilities, and the real answer here is usually more than one row.</p>
+</section>
+
+<!-- ===================== TOOL 2: PERCEPTION SORTER ===================== -->
+<section id="see" hidden>
+  <h2>What is she seeing?</h2>
+  <p class="lead">Each card is a description. Choose the best label, then read why. The first six are from tonight's case; the rest are classic contrasts.</p>
+  <div class="progress" id="sprog"></div>
+  <div class="card" id="scard"></div>
+  <div class="row"><button class="btn" id="snext">Next card</button><button class="btn" id="srestart">Start over</button></div>
+  <h3>Three questions to ask every time</h3>
+  <div class="key">
+    <div><b>1. Was something really there?</b> Yes, misread: an <i>illusion</i>. Nothing there: a <i>hallucination</i>.</div>
+    <div><b>2. Does she know it isn't real?</b> Insight kept, often calm curiosity: think <i>release phenomena</i> from the brain or the eyes (brainstem lesions, vision loss, medication). Insight lost, with delusions: think primary psychosis, delirium or intoxication.</div>
+    <div><b>3. Which sense, and when?</b> Visual, formed, evening or night: brain, eyes or drugs first. Voices commenting or commanding: primary psychiatric illness is more likely. Brief, stereotyped, with other signs: consider seizure or migraine.</div>
+  </div>
+</section>
+
+<!-- ===================== TOOL 3: THE LOOP ===================== -->
+<section id="loop" hidden>
+  <h2>The loop</h2>
+  <p class="lead">Her therapist describes a cycle: a simple task overloads her, the slowing upsets her, the upset brings on physical symptoms, and losing control of her body upsets her more. Turn on treatments and see what weakens the loop.</p>
+  <div class="loopwrap"><svg id="loopsvg" viewBox="0 0 420 420" width="100%" role="img" aria-label="Six-step feedback loop diagram"></svg></div>
+  <div class="meter"><b id="mlabel">Loop strength</b><div class="bar"><i id="mbar" style="width:100%"></i></div></div>
+  <h3>Psychiatric and psychological</h3>
+  <div class="chips" id="i-psych"></div>
+  <h3>Physical and neurological</h3>
+  <div class="chips" id="i-phys"></div>
+  <h3>Social</h3>
+  <div class="chips" id="i-soc"></div>
+  <div class="verdict" id="lverdict"></div>
+  <p class="note">The point of this toy is the therapist's claim: neither side alone breaks the loop, because each side keeps re-triggering the other.</p>
+</section>
+
+</main>
+<script>
+// ---------- tabs ----------
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('main section').forEach(s=>s.hidden=s.id!==b.dataset.tab);
+  window.scrollTo({top:0});
+}));
+
+// ---------- TOOL 1 ----------
+const DX = {
+  struct:"Structural progression (aneurysm regrowth or mass effect)",
+  secpsy:"Psychosis due to another medical condition (brainstem release hallucinations)",
+  meds:"Medication effects on perception, cognition and alertness",
+  fnd:"Functional neurological disorder (overlay on structural disease)",
+  dep:"Depressive disorder due to a medical condition, plus grief and adjustment",
+  ncd:"Neurocognitive disorder from structural or vascular injury",
+  vbi:"Posterior circulation ischemia (positional, vertebrobasilar)",
+  scz:"Primary psychotic disorder (schizophrenia spectrum)",
+  bip:"Bipolar spectrum disorder"
+};
+// each finding: id, label, group, effects [dx, weight, reason]
+const F = [
+ {id:"aneur",g:"early",t:"Large basilar aneurysm compressing the brainstem, coiled",e:[
+   ["struct",2,"A large posterior-circulation aneurysm is a standing structural cause; coiled large aneurysms can reopen."],
+   ["secpsy",2,"Brainstem and midbrain lesions are the classic cause of release (peduncular) hallucinations."],
+   ["ncd",1,"Mass effect and treatment can injure brainstem and connected circuits."],
+   ["vbi",1,"Posterior circulation is already abnormal."]]},
+ {id:"fndhx",g:"early",t:"FND with non-epileptic events, confirmed on video EEG",e:[
+   ["fnd",3,"A confirmed functional diagnosis, made on positive features."],
+   ["struct",-1,"Risk: once 'functional' is on the chart, new deficits tend to be filed there too (diagnostic overshadowing)."]]},
+ {id:"fhx",g:"early",t:"First-degree relative with schizophrenia",e:[
+   ["scz",2,"Raises lifetime risk roughly tenfold, but onset in the 40s with no prior psychosis is unusual."],
+   ["bip",1,"Family loading for psychiatric illness in general."]]},
+ {id:"night",g:"early",t:"Formed visual misperceptions at night (pillows as moths); she finds them odd, not distressing",e:[
+   ["secpsy",2,"Formed, visual, evening or night, insight kept, emotionally neutral: the release-hallucination pattern."],
+   ["meds",1,"Several of her medications can distort perception, especially at night."],
+   ["scz",-2,"Visual-only, insight intact and non-distressing argues against primary psychosis."]]},
+ {id:"lowmood",g:"early",t:"Low mood, daily crying, grief over lost function ('a success story outside, impaired inside')",e:[
+   ["dep",3,"Clear depressive symptoms tied to loss of function, identity and medical burden."],
+   ["fnd",1,"Mood and anxiety commonly co-occur with and drive FND."]]},
+ {id:"lability",g:"early",t:"Mood swings and irritability",e:[
+   ["bip",1,"Lability can be bipolar spectrum, but there are no clear episodes of mania or hypomania."],
+   ["dep",1,"Irritability is common in depression and adjustment."],
+   ["ncd",1,"Emotional lability is a known effect of brainstem and frontal-subcortical injury."]]},
+ {id:"dxmflx",g:"early",t:"On dextromethorphan-bupropion plus fluoxetine",e:[
+   ["meds",2,"Fluoxetine strongly inhibits CYP2D6, raising dextromethorphan levels (the label lowers the dose for this). Dextromethorphan can cause dissociative and perceptual effects; bupropion lowers seizure threshold and has psychosis reports."]]},
+ {id:"topa",g:"early",t:"Topiramate dose recently raised",e:[
+   ["meds",2,"Topiramate commonly slows thinking and word-finding, and rarely causes mood change or psychosis."],
+   ["ncd",-1,"Some 'cognitive decline' may be drug effect; recheck before calling it permanent."]]},
+ {id:"stress",g:"early",t:"Episodes triggered by emotional stress",e:[
+   ["fnd",2,"Stress-triggered episodes fit the functional model, though stress worsens structural symptoms too."],
+   ["dep",1,"Ongoing stressors sustain mood symptoms."]]},
+ {id:"rightside",g:"late",t:"Progressive right-sided numbness, weakness and near-falls",e:[
+   ["struct",3,"New, progressive, lateralized deficits need structural re-evaluation, whatever the chart says."],
+   ["vbi",1,"Posterior-circulation ischemia can cause sensory and motor deficits."],
+   ["fnd",1,"FND can cause one-sided weakness, but it should show positive functional signs on exam."]]},
+ {id:"emg",g:"late",t:"EMG: reduced activation of several muscles, possibly central",e:[
+   ["struct",2,"Points to a central nervous system cause; needs neurology to interpret."],
+   ["fnd",1,"Poor voluntary activation can also be seen in functional weakness, so it is not decisive."]]},
+ {id:"headturn",g:"late",t:"Vision changes when turning her head to the right",e:[
+   ["vbi",3,"Symptoms provoked by head rotation raise rotational vertebral artery compression ('bow hunter's syndrome'): a vascular red flag."],
+   ["struct",1,"Positional symptoms deserve vascular imaging, not reassurance."]]},
+ {id:"daylight",g:"late",t:"Now seeing people in daylight; 'shadows from people'",e:[
+   ["secpsy",2,"Formed visual hallucinations without a stimulus, changing in character: secondary psychosis rises."],
+   ["struct",1,"A change in the hallucinations should prompt a look for structural change."],
+   ["scz",1,"Formed hallucinations in daylight are a step beyond illusions; keep primary psychosis on the list."],
+   ["meds",1,"Review every perception-altering drug when hallucinations change."]]},
+ {id:"sleepattack",g:"late",t:"Daytime sleep attacks on gabapentin, pregabalin and lamotrigine",e:[
+   ["meds",2,"Stacked sedating drugs can explain sudden daytime sleep and worsen cognition."],
+   ["struct",1,"Brainstem compression can disturb arousal; new hypersomnolence deserves a look."],
+   ["dep",-1,"Sleepiness may not be depression; check the medication list first."]]},
+ {id:"slowed",g:"late",t:"Slowed processing, word-finding trouble, worse handwriting with the dominant hand",e:[
+   ["ncd",3,"Objective-sounding cognitive and motor decline: formal neurocognitive testing is indicated."],
+   ["meds",1,"Topiramate and gabapentinoids can produce exactly this."],
+   ["dep",1,"Depression slows processing, but rarely changes handwriting."]]},
+ {id:"nodelusion",g:"late",t:"No delusions, no disorganized thinking, no command voices",e:[
+   ["scz",-3,"Without delusions, disorganization or auditory hallucinations, schizophrenia is unlikely."],
+   ["secpsy",1,"Isolated visual hallucinations with clear thinking fit a secondary cause."]]},
+ {id:"hoover",g:"whatif",t:"What if: positive Hoover sign and give-way weakness on exam",e:[
+   ["fnd",3,"Positive functional signs make the new weakness more likely functional."],
+   ["struct",-1,"Lowers, but does not exclude, structural progression: both can coexist."]]},
+ {id:"delusion",g:"whatif",t:"What if: fixed persecutory beliefs and voices commenting",e:[
+   ["scz",3,"Delusions plus auditory hallucinations move primary psychosis up sharply."],
+   ["secpsy",1,"Secondary psychosis can include delusions too."]]},
+ {id:"mania",g:"whatif",t:"What if: four days of little sleep, high energy and grand plans",e:[
+   ["bip",4,"A discrete hypomanic or manic episode would anchor a bipolar diagnosis."],
+   ["meds",1,"Antidepressants can trigger switches; check timing."]]}
+];
+const PRESET1 = ["aneur","fndhx","fhx","night","lowmood","lability","dxmflx","topa","stress"];
+const PRESET2 = PRESET1.concat(["rightside","emg","headturn","daylight","sleepattack","slowed","nodelusion"]);
+let on = new Set(PRESET1);
+
+function chip(f){
+  const b=document.createElement('button');
+  b.className='chip'+(f.g==='whatif'?' whatif':'');
+  b.textContent=f.t; b.dataset.id=f.id;
+  b.setAttribute('aria-pressed',on.has(f.id));
+  b.onclick=()=>{on.has(f.id)?on.delete(f.id):on.add(f.id);renderDx();};
+  return b;
+}
+function renderDx(){
+  ['early','late','whatif'].forEach(g=>{
+    const el=document.getElementById('f-'+g); el.innerHTML='';
+    F.filter(f=>f.g===g).forEach(f=>el.appendChild(chip(f)));
+  });
+  const s={}; Object.keys(DX).forEach(k=>s[k]={score:0,items:[]});
+  F.filter(f=>on.has(f.id)).forEach(f=>f.e.forEach(([k,w,r])=>{s[k].score+=w;s[k].items.push({w,r,t:f.t});}));
+  const max=Math.max(4,...Object.values(s).map(v=>v.score));
+  const open=new Set([...document.querySelectorAll('#dxlist details[open]')].map(d=>d.dataset.k));
+  const top3=Object.keys(DX).sort((a,b)=>s[b].score-s[a].score).slice(0,3);
+  document.getElementById('dxmini').innerHTML='<b>Leading now:</b> '+top3.map((k,i)=>`${i+1}. ${DX[k].split(' (')[0]} (${s[k].score>0?'+':''}${s[k].score})`).join(' · ')+' <a href="#dxlist">full list ↓</a>';
+  const list=document.getElementById('dxlist'); list.innerHTML='';
+  Object.keys(DX).sort((a,b)=>s[b].score-s[a].score).forEach(k=>{
+    const d=document.createElement('details'); d.className='dx'; d.dataset.k=k; if(open.has(k)) d.open=true;
+    const pct=Math.max(0,s[k].score)/max*100;
+    d.innerHTML=`<summary><div class="dxtop"><span>${DX[k]}</span><span class="score">${s[k].score>0?'+':''}${s[k].score}</span></div><div class="bar"><i style="width:${pct}%"></i></div></summary>`;
+    if(s[k].items.length){
+      const ul=document.createElement('ul');
+      s[k].items.sort((a,b)=>b.w-a.w).forEach(it=>{const li=document.createElement('li');li.className=it.w>0?'for':'against';li.innerHTML=`<b>${it.t}.</b> ${it.r}`;ul.appendChild(li);});
+      d.appendChild(ul);
+    } else { const p=document.createElement('div');p.className='none';p.textContent='No selected finding bears on this yet.';d.appendChild(p);}
+    list.appendChild(d);
+  });
+}
+document.getElementById('preset1').onclick=()=>{on=new Set(PRESET1);renderDx();};
+document.getElementById('preset2').onclick=()=>{on=new Set(PRESET2);renderDx();};
+document.getElementById('presetClear').onclick=()=>{on=new Set();renderDx();};
+renderDx();
+
+// ---------- TOOL 2 ----------
+const OPTS=["Illusion","Hallucination (primary psychiatric pattern)","Release hallucination (brain or eyes; insight kept)","Something else"];
+const CARDS=[
+ {q:"“The pillows looked like a pile of moths, or brains, and they were glowing.”",c:"From the case. At night, in a dim room. She found it odd, not frightening.",a:0,x:"Something real (the pillows) was misperceived, so this is an illusion. Dim light, fatigue and medications make illusions more likely. Insight is intact, which is reassuring."},
+ {q:"“The door looked icy, like it was frozen over.”",c:"From the case. During a recent episode.",a:0,x:"An illusion again: a real door, a distorted appearance. Notice the pattern: visual, vivid, emotionally neutral."},
+ {q:"“The ceiling looked like it was dripping.”",c:"From the case. Improved after a medication was restarted.",a:0,x:"An illusion. When perceptual symptoms move with medication changes, put drugs on the list, both as causes and as treatments."},
+ {q:"“I sense someone is in the room behind me.”",c:"From the case. Daily, with hypervigilance at night.",a:3,x:"A 'feeling of presence' is not a visual hallucination. It is described in Parkinson's and Lewy body disease, brainstem and parietal lesions, and also in anxiety and hypervigilance. Ask more before labelling it."},
+ {q:"“I see people standing in front of me in broad daylight. Nobody is there.”",c:"From the case, a year in.",a:2,x:"Nothing is there, so this is a true hallucination. Formed, visual, with insight and no delusions, in someone with brainstem compression: a release (secondary) hallucination is most likely. It is new and different, so it should also prompt a structural re-check."},
+ {q:"“I see shadows from people, and I feel like a shadow.”",c:"From the case, latest visit.",a:3,x:"Two things at once: a visual misperception or hallucination, and possibly depersonalization ('I feel like a shadow'). Ambiguous descriptions deserve a follow-up question, not a forced label."},
+ {q:"“A voice keeps commenting on everything I do. They put it there through the TV.”",c:"Classic contrast.",a:1,x:"Auditory, commenting, with a delusional explanation and no insight: the primary psychotic pattern. Compare how different this feels from the case."},
+ {q:"“At dusk I see small people in bright costumes on the windowsill. I know they aren't real; they're rather charming.”",c:"Classic contrast: a man in his 70s after a midbrain stroke.",a:2,x:"Textbook peduncular hallucinosis: vivid, formed, often small figures, at dusk, with insight and curiosity rather than fear. Charles Bonnet syndrome (vision loss) looks similar."},
+ {q:"“A shimmering zigzag spreads across my vision for twenty minutes, then the headache starts.”",c:"Classic contrast.",a:3,x:"Migraine aura: elementary (not formed) visual phenomena that spread over minutes, then resolve. Brief, stereotyped visual events with other signs make you think of occipital seizures."},
+ {q:"“Just as I fall asleep I hear my name called.”",c:"Classic contrast.",a:3,x:"A hypnagogic hallucination: common, usually benign, at sleep onset. Frequent, vivid ones with sleep attacks raise narcolepsy, which matters here given her daytime sleep episodes."}
+];
+let si=0, answered=false;
+function renderCard(){
+  const c=CARDS[si]; answered=false;
+  document.getElementById('sprog').textContent=`Card ${si+1} of ${CARDS.length}`;
+  const el=document.getElementById('scard');
+  el.innerHTML=`<div class="quote">${c.q}</div><div class="ctx">${c.c}</div><div class="opts"></div><div class="explain"></div>`;
+  const opts=el.querySelector('.opts');
+  OPTS.forEach((o,i)=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>{
+    if(answered) return; answered=true;
+    b.classList.add(i===c.a?'right':'wrong');
+    opts.children[c.a].classList.add('right');
+    const ex=el.querySelector('.explain'); ex.innerHTML=`<b style="color:var(--gold)">${i===c.a?'Yes.':'Best answer: '+OPTS[c.a]+'.'}</b> ${c.x}`; ex.classList.add('show');
+  };opts.appendChild(b);});
+}
+document.getElementById('snext').onclick=()=>{si=(si+1)%CARDS.length;renderCard();};
+document.getElementById('srestart').onclick=()=>{si=0;renderCard();};
+renderCard();
+
+// ---------- TOOL 3 ----------
+const NODES=["A simple task\n(ordering\ncoffee)","Overload,\nslowed\nthinking","Anxiety,\nfrustration","Mood\nswings","Numbness,\nhead\npressure","Loss of\ncontrol of\nher body"];
+// interventions: which link indices (from node i to i+1) they weaken, and by how much; side
+const INT=[
+ {id:"pace",s:"psych",t:"Pacing and acceptance: tasks will take longer (CBT)",links:{1:.35}},
+ {id:"ground",s:"psych",t:"Grounding and emotion-regulation skills",links:{2:.3,5:.2}},
+ {id:"lamo",s:"psych",t:"Mood stabilizer for lability",links:{3:.3}},
+ {id:"fndtx",s:"psych",t:"FND-informed psychotherapy and education",links:{3:.15,5:.25}},
+ {id:"surg",s:"phys",t:"Re-evaluate the aneurysm (second opinion, retreatment)",links:{4:.4,0:.15}},
+ {id:"pt",s:"phys",t:"Physical therapy for right-sided weakness",links:{4:.2,5:.15}},
+ {id:"sed",s:"phys",t:"Cut sedating drugs to clear thinking",links:{0:.25,1:.15}},
+ {id:"pain",s:"phys",t:"Pain management and headache control",links:{4:.2}},
+ {id:"supp",s:"soc",t:"Support at home: validation, shared tasks",links:{2:.2,5:.1}},
+ {id:"money",s:"soc",t:"Disability and financial help",links:{2:.15}}
+];
+const lon=new Set();
+function renderLoop(){
+  const w=[1,1,1,1,1,1];
+  INT.filter(i=>lon.has(i.id)).forEach(i=>Object.entries(i.links).forEach(([k,v])=>w[k]=Math.max(.08,w[k]-v)));
+  const psychOn=[...lon].some(id=>INT.find(i=>i.id===id).s==='psych');
+  const physOn=[...lon].some(id=>INT.find(i=>i.id===id).s==='phys');
+  let strength=Math.sqrt(w.reduce((a,b)=>a*b,1)); // a loop's gain is the product of its links
+  if(!(psychOn&&physOn)) strength=Math.max(strength,0.62); // one side alone: the other keeps re-triggering
+  const svg=document.getElementById('loopsvg'); const cx=210,cy=210,R=148;
+  const pts=NODES.map((_,i)=>{const a=-Math.PI/2+i*2*Math.PI/6;return [cx+R*Math.cos(a),cy+R*Math.sin(a)];});
+  let h=`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#ffb81c"/></marker></defs>`;
+  pts.forEach((p,i)=>{const q=pts[(i+1)%6];
+    const mx=(p[0]+q[0])/2, my=(p[1]+q[1])/2; const ox=(mx-cx)*.18, oy=(my-cy)*.18;
+    const sx=p[0]+(q[0]-p[0])*.22, sy=p[1]+(q[1]-p[1])*.22, ex=p[0]+(q[0]-p[0])*.78, ey=p[1]+(q[1]-p[1])*.78;
+    h+=`<path d="M${sx},${sy} Q${mx+ox},${my+oy} ${ex},${ey}" fill="none" stroke="#ffb81c" stroke-width="${1+w[i]*5}" stroke-opacity="${.25+w[i]*.75}" ${w[i]<.5?'stroke-dasharray="5 5"':''} marker-end="url(#ah)"/>`;});
+  pts.forEach((p,i)=>{
+    h+=`<circle cx="${p[0]}" cy="${p[1]}" r="56" fill="#00205b" stroke="#2c4a8c" stroke-width="1.5"/>`;
+    NODES[i].split('\n').forEach((ln,j,arr)=>{h+=`<text x="${p[0]}" y="${p[1]+(j-(arr.length-1)/2)*15+5}" text-anchor="middle" font-size="13" fill="#fff">${ln}</text>`;});
+  });
+  h+=`<text x="210" y="198" text-anchor="middle" font-size="13" fill="#b8c4d9">Outside pressure:</text><text x="210" y="216" text-anchor="middle" font-size="12" fill="#b8c4d9">home, money,</text><text x="210" y="232" text-anchor="middle" font-size="12" fill="#b8c4d9">feeling dismissed</text>`;
+  svg.innerHTML=h;
+  document.getElementById('mbar').style.width=(strength*100)+'%';
+  const label=strength>.7?'Loop: strong':strength>.5?'Loop: weakening':strength>.3?'Loop: breakable':'Loop: broken';
+  document.getElementById('mlabel').textContent=label;
+  let v;
+  if(!lon.size) v="Nothing on yet. Every link runs at full strength.";
+  else if(psychOn&&!physOn) v="Psychological work alone helps, but her physical symptoms keep re-triggering the anxiety. This is where her therapy has stalled.";
+  else if(physOn&&!psychOn) v="Treating the body alone helps, but overload and mood swings still bring the symptoms back.";
+  else v=strength>.4?"Both sides are on. Add one more piece and the loop gets much weaker.":"Both sides at once: the loop breaks. That is the therapist's argument for treating them together.";
+  document.getElementById('lverdict').textContent=v;
+  ['psych','phys','soc'].forEach(s=>{const el=document.getElementById('i-'+s);el.innerHTML='';
+    INT.filter(i=>i.s===s).forEach(i=>{const b=document.createElement('button');b.className='chip';b.textContent=i.t;b.setAttribute('aria-pressed',lon.has(i.id));b.onclick=()=>{lon.has(i.id)?lon.delete(i.id):lon.add(i.id);renderLoop();};el.appendChild(b);});
+  });
+}
+renderLoop();
+</script>
+</body>
+</html>
